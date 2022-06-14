@@ -12,8 +12,6 @@ const user = require('./user/user_index');
 const admin = require('./admin/admin_index');
 
 
-
-
 /*-----------------------------------
 	not needed to verify
 -----------------------------------*/

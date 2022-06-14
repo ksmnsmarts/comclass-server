@@ -5,22 +5,18 @@ const multer = require('multer');
 /*-----------------------------------
 	INDEXES
 -----------------------------------*/
-const classInfo = require('./class/adClass_index')
+
 
 /*-----------------------------------
 	Controller
 -----------------------------------*/
-const adProfileCtrl = require('./adProfile/adProfile_controller');
+const adClassCtrl = require('./adClass_controller')
 
 
 
 /*-----------------------------------
 	API
 -----------------------------------*/
-router.use('/classInfo', classInfo);
-
-
-
 
 /* Profile Image Update */
 const storage = multer.diskStorage({
@@ -35,9 +31,15 @@ const storage = multer.diskStorage({
     }
 });
 const upload = multer({ storage });
-/* Profile */
-router.get('/profile', adProfileCtrl.profile);
 
+
+
+
+/*-----------------------------------
+    Class 
+-----------------------------------*/
+router.post('/addClass', adClassCtrl.addClass);
+router.get('/getClass', adClassCtrl.getClass);
 
 
 module.exports = router;

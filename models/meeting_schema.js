@@ -1,23 +1,36 @@
 const mongoose = require('mongoose');
 
 const meetingSchema = mongoose.Schema(
-	{
-        manager: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Member',
+    {
+        teacher: {
+            type: String
         },
-        enlistedMembers: [ // 스페이스에 있는 멤버들
-            {
+        subject: {
+            type: String
+        },
+
+        manager: 
+        {
+            _id: false, // 추가 : array 내에 object ID 생성 안함
+            manager_id: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Member',
+                ref: 'Admin',
+            },
+            manager_email: {
+                type: String
+            },
+            manager_name: {
+                type: String
             }
-        ],
+        }
+        ,
+
 
         // 실시간 미팅에서 쓰이는 currentMembers
         currentMembers: [
             {
-                _id : false, // 추가 : array 내에 object ID 생성 안함
-                member_id:{
+                _id: false, // 추가 : array 내에 object ID 생성 안함
+                member_id: {
                     type: mongoose.Schema.Types.ObjectId,
                     ref: 'Member',
                 },
@@ -29,19 +42,6 @@ const meetingSchema = mongoose.Schema(
                 }
             }
         ],
-        spaceId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Space',
-        },
-        meetingTitle: {
-            type: String
-        },
-        meetingDescription: {
-            type: String
-        },
-        isDone: {
-            type: Boolean
-        },
 
         // 회의가 pending, open ,close인지 상태를 보여준다.
         status: {
@@ -53,10 +53,10 @@ const meetingSchema = mongoose.Schema(
         start_time: {
             type: String
         }
-	},
-	{
-		timestamps: true
-	}
+    },
+    {
+        timestamps: true
+    }
 );
 
 const Meeting = mongoose.model('Meeting', meetingSchema);

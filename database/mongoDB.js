@@ -25,6 +25,7 @@ function createSchema() {
 	const dbModels = {};
 
 	dbModels.Admin = require('../models/admin_schema');
+    dbModels.Meeting = require('../models/meeting_schema');
 	
 
 	global.DB_MODELS = dbModels;
