@@ -85,11 +85,10 @@ exports.getClass = async (req, res) => {
 			});
 		}
 
-        console.log(meetingInfo)
-
 		return res.send(
             meetingInfo
         );
+        
 	} catch (err) {
 		console.log(err);
 		return res.status(500).send('db Error');
