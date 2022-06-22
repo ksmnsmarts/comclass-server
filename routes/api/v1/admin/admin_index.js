@@ -1,5 +1,11 @@
 const router = require('express').Router();
 const multer = require('multer');
+const { isAuthenticated } = require("../../../../middlewares/auth");
+
+/*-----------------------------------
+	Token verify
+-----------------------------------*/
+router.use(isAuthenticated);
 
 
 /*-----------------------------------

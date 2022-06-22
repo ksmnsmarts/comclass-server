@@ -5,7 +5,7 @@ var fs = require("fs");
 exports.getClass = async (req, res) => {
 	console.log(`
 --------------------------------------------------
-  User Profile: ${req.decoded._id}
+  User Profile: req.decoded._id
   router.get('/getClass', adClassCtrl.getClass);
 --------------------------------------------------`);
 
@@ -14,13 +14,13 @@ exports.getClass = async (req, res) => {
     const data = req.body;
 
 
-	const criteria = {
-        'manager.manager_id': req.decoded._id 
-    };
+	// const criteria = {
+    //     'manager.manager_id': req.decoded._id 
+    // };
 	
 
 	try {
-		const meetingInfo = await dbModels.Meeting.find(criteria);
+		const meetingInfo = await dbModels.Meeting.find();
 
         if (!meetingInfo) {
 			return res.status(401).send({
