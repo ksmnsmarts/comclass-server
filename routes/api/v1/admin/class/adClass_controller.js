@@ -104,24 +104,24 @@ exports.upload = async (req, res) => {
 --------------------------------------------------
   User Profile: ${req.decoded._id}
   API  : Post my pdf
-  router.post(/upload/:meetingId', meetingContollder.upload);
+  router.post(/upload/:classId', meetingContollder.upload);
 --------------------------------------------------`);
     const dbModels = global.DB_MODELS;
 
     try {
 
-        if (!req.params.meetingId) {
+        if (!req.params.classId) {
             return res.status(400).send('invalid meeting id1');
         }
 
-        result = await dbModels.Meeting.findOne({ _id: req.params.meetingId });
+        result = await dbModels.Meeting.findOne({ _id: req.params.classId });
 
         if (!result) {
             return res.status(400).send('invalid meeting id2');
         }
         // console.log(req.files[0])
         const criteria = {
-            meetingId: req.params.meetingId,
+            classId: req.params.classId,
             originalFileName: req.files[0].originalname,
             fileName: req.files[0].filename,
             saveKey: req.files[0].key,

@@ -79,7 +79,7 @@ const upload = multer({
 -----------------------------------*/
 router.post('/addClass', adClassCtrl.addClass);
 router.get('/getClass', adClassCtrl.getClass);
-router.post('/upload/:meetingId', upload.any(), adClassCtrl.upload);
+router.post('/upload/:classId', upload.any(), adClassCtrl.upload);
 
 
 module.exports = router;
