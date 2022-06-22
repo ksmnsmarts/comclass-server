@@ -134,7 +134,7 @@ const socketComclass = wsServer.of('/socketComclass');
 // const teacher = require('./controllers/webRTC/socketHandler-sharing.js')
 
 socketComclass.on('connection', (socket) => {
-    teacher(wsServer, socket, app )
+    // teacher(wsServer, socket, app )
 });
 
 
