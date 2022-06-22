@@ -131,10 +131,10 @@ const socketComclass = wsServer.of('/socketComclass');
 /*-----------------------------------------------
     webRTC Socket event handler
 -----------------------------------------------*/
-// const teacher = require('./controllers/webRTC/socketHandler-sharing.js')
+const drawing = require('./controllers/comclass/socketHandler-drawing.js')
 
 socketComclass.on('connection', (socket) => {
-    teacher(wsServer, socket, app )
+    drawing(wsServer, socket, app )
 });
 
 
