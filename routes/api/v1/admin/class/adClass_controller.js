@@ -188,13 +188,12 @@ exports.getPdfFile = async (req, res) => {
     console.log(`
 --------------------------------------------------
   User : 
-  API  : Get my classInfo
+  API  : Get my getPdfFile
   router.get('/classInfo', adClassCtrl.getPdfFile);
 --------------------------------------------------`);
     const dbModels = global.DB_MODELS;
 
     const data = req.query
-    console.log(data)
 
     const criteria = {
         _id: data._id
@@ -203,6 +202,7 @@ exports.getPdfFile = async (req, res) => {
     await dbModels.Doc.findOne(criteria).then((result) => {
         console.log(result)
         const key = result.saveKey;
+        console.log(bucket)
         console.log(key)
         res.attachment(key);
         var file = s3.getObject({
@@ -210,6 +210,7 @@ exports.getPdfFile = async (req, res) => {
             Key: key
         }).createReadStream()
             .on("error", error => {
+                console.log(error)
             });
         file.pipe(res);
     })
