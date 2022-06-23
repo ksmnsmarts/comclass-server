@@ -80,6 +80,7 @@ const upload = multer({
 router.post('/addClass', adClassCtrl.addClass);
 router.get('/getClass', adClassCtrl.getClass);
 router.post('/upload/:classId', upload.any(), adClassCtrl.upload);
-
+router.get('/documentInfo', adClassCtrl.documentInfo);
+router.get('/getPdfFile', adClassCtrl.getPdfFile);
 
 module.exports = router;

@@ -39,6 +39,6 @@ const upload = multer({ storage });
 -----------------------------------*/
 
 router.get('/getClass', classCtrl.getClass);
-
+router.get('/documentInfo', classCtrl.documentInfo);
 
 module.exports = router;

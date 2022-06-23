@@ -6,7 +6,6 @@ const docSchema = mongoose.Schema(
         classId: {
             type: String
         },
-
         originalFileName: {
             type: String
         },
