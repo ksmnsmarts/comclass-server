@@ -157,7 +157,7 @@ exports.documentInfo = async (req, res) => {
     const dbModels = global.DB_MODELS;
 
     const data = req.query;
-
+    console.log(data)
     const criteria = {
         classId: data.classId
     }
