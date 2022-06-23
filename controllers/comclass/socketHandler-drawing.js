@@ -22,13 +22,13 @@ module.exports = function (wsServer, socket, app) {
      *  - code 통일성을 위해서!
      */
     socket.on("check:documents", (meetingRoomId) => {
-        // console.log(meetingRoomId)
+        console.log(meetingRoomId)
         socketComclass.to(meetingRoomId).emit("check:documents");
     });
 
     socket.on("draw:teacher", async (data) => {
-        // console.log('client --------> server draw event')
-        socket.broadcast.to(socket.meetingId).emit("draw:teacher", data);
+        console.log('client --------> server draw event')
+        socket.broadcast.to(socket._id).emit("draw:teacher", data);
         // console.log(data)
         const drawData = {
             pageNum: data.pageNum,
@@ -38,7 +38,7 @@ module.exports = function (wsServer, socket, app) {
         // tool이 포인터이면 드로잉 이벤를 저장하지 않는다.
         var res = {};
         if (data.drawingEvent.tool.type != "pointer") {
-            // res = await dbModels.Doc.findOneAndUpdate({ _id: data.docId }, { $push: { drawingEventSet: drawData } });
+            res = await dbModels.Doc.findOneAndUpdate({ _id: data.docId }, { $push: { drawingEventSet: drawData } });
         }
     });
 
