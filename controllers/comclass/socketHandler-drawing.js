@@ -17,6 +17,11 @@ module.exports = function (wsServer, socket, app) {
             console.log("studentName:", data.studentName)
         }
 
+        const userCount = socket.adapter.rooms.get(data._id)?.size;
+
+        // 자기 자신 포함 같은 room에 있는 사람들에게 현재 접속자 수 전달
+        socketComclass.to(data._id).emit("studentCount", userCount);
+
     });
 
     socket.on("disconnect", async function () {
@@ -38,9 +43,15 @@ module.exports = function (wsServer, socket, app) {
             );
             console.log(meetingInfo?.currentMembers)
         }
+
         if (socket.classId) {
             socket.leave(socket.classId);
         }
+
+        const userCount = socket.adapter.rooms.get(socket.classId)?.size;
+
+        // 자기 자신 포함 같은 room에 있는 사람들에게 현재 접속자 수 전달
+        socketComclass.to(socket.classId).emit("studentCount", userCount);
     });
 
     /**
