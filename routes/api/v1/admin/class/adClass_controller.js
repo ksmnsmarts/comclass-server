@@ -97,6 +97,44 @@ exports.getClass = async (req, res) => {
 
 }
 
+// 수업정보 가져오기
+exports.getClassInfo = async (req, res) => {
+    console.log(`
+--------------------------------------------------
+  User Profile: ${req.decoded._id}
+  router.get('/getClassInfo', adClassCtrl.getClassInfo);
+--------------------------------------------------`);
+
+    const dbModels = global.DB_MODELS;
+
+    const data = req.query;
+
+
+    const criteria = {
+        '_id': data._id
+    };
+
+
+    try {
+        const meetingInfo = await dbModels.Meeting.findOne(criteria);
+
+        if (!meetingInfo) {
+            return res.status(401).send({
+                message: 'An error has occurred'
+            });
+        }
+
+        return res.send(
+            meetingInfo
+        );
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send('db Error');
+    }
+
+}
+
 
 
 exports.upload = async (req, res) => {

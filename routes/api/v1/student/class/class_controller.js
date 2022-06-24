@@ -5,10 +5,10 @@ const bucket = global.AWS_S3.bucket;
 
 // 수업 가져오기
 exports.getClass = async (req, res) => {
-	console.log(`
+    console.log(`
 --------------------------------------------------
   User Profile: req.decoded._id
-  router.get('/getClass', adClassCtrl.getClass);
+  router.get('/getClass', classCtrl.getClass);
 --------------------------------------------------`);
 
     const dbModels = global.DB_MODELS;
@@ -16,37 +16,125 @@ exports.getClass = async (req, res) => {
     const data = req.body;
 
 
-	// const criteria = {
+    // const criteria = {
     //     'manager.manager_id': req.decoded._id 
     // };
-	
 
-	try {
-		const meetingInfo = await dbModels.Meeting.find();
+
+    try {
+        const meetingInfo = await dbModels.Meeting.find();
 
         if (!meetingInfo) {
-			return res.status(401).send({
-				message: 'An error has occurred'
-			});
-		}
+            return res.status(401).send({
+                message: 'An error has occurred'
+            });
+        }
 
-		return res.send(
+        return res.send(
             meetingInfo
         );
-        
-	} catch (err) {
-		console.log(err);
-		return res.status(500).send('db Error');
-	}
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send('db Error');
+    }
 
 }
 
+// 수업정보 가져오기
+exports.getClassInfo = async (req, res) => {
+    console.log(`
+--------------------------------------------------
+  User Profile: 
+  router.get('/getClassInfo', classCtrl.getClassInfo);
+--------------------------------------------------`);
+
+    const dbModels = global.DB_MODELS;
+
+    const data = req.query;
+
+
+    const criteria = {
+        '_id': data._id
+    };
+
+
+    try {
+        const meetingInfo = await dbModels.Meeting.findOne(criteria);
+
+        if (!meetingInfo) {
+            return res.status(401).send({
+                message: 'An error has occurred'
+            });
+        }
+
+        return res.send(
+            meetingInfo
+        );
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send('db Error');
+    }
+
+}
+
+// 수업 참가하기
+exports.joinClass = async (req, res) => {
+    console.log(`
+--------------------------------------------------
+  User Profile: req.decoded._id
+  router.get('/joinClass', classCtrl.joinClass);
+--------------------------------------------------`);
+
+    const dbModels = global.DB_MODELS;
+
+    const data = req.body;
+    console.log(data)
+
+    const criteria = {
+        '_id': data.meeting._id
+    };
+
+    const student = {
+        studentName : data.studentName
+    }
+
+
+    try {
+        const meetingInfo = await dbModels.Meeting.findOneAndUpdate(criteria,
+            { 
+                $push: { currentMembers: student } 
+            }, 
+            {
+                new: true
+            }
+        );
+
+        console.log(meetingInfo)
+
+        if (!meetingInfo) {
+            return res.status(401).send({
+                message: 'An error has occurred'
+            });
+        }
+
+        return res.send(
+            meetingInfo
+        );
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send('db Error');
+    }
+
+}
 
 
 /**
  *   참가한 회의 정보 불러오기
  */
- exports.documentInfo = async (req, res) => {
+exports.documentInfo = async (req, res) => {
 
     console.log(`
 --------------------------------------------------
@@ -90,7 +178,7 @@ exports.getPdfFile = async (req, res) => {
 --------------------------------------------------
   User : 
   API  : Get my getPdfFile
-  router.get('/classInfo', adClassCtrl.getPdfFile);
+  router.get('/classInfo', classCtrl.getPdfFile);
 --------------------------------------------------`);
     const dbModels = global.DB_MODELS;
 

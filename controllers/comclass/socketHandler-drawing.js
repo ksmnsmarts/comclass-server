@@ -3,16 +3,43 @@ module.exports = function (wsServer, socket, app) {
 
     const socketComclass = wsServer.of("/socketComclass");
 
-    socket.on("join:class", (roomId) => {
-        console.log("join Class:", roomId);
-        socket.join(roomId);
-        socket._id = roomId;
+    socket.on("join:class", (data) => {
+        console.log(data)
+        console.log("join Class:", data.subject);
+        socket.join(data._id);
+        socket.classId = data._id;
+        if(data.teacher){
+            socket.teacher = data.teacher
+            console.log("teacher:", data.teacher)
+        }
+        if (data.studentName) {
+            socket.studentName = data.studentName
+            console.log("studentName:", data.studentName)
+        }
+
     });
 
-    socket.on("disconnect", function () {
-        console.log("\n ---> teacher:disconnected:", socket._id);
-        if (socket._id) {
-            socket.leave(socket._id);
+    socket.on("disconnect", async function () {
+        console.log("\n ---> class:disconnected:", socket.classId);
+        if (!socket.studentName) {
+            console.log("disconnect teacher: ", socket.teacher)
+        }
+        if (socket.studentName){
+            console.log("disconnect student: ", socket.studentName)
+            const meetingInfo = await dbModels.Meeting.findOneAndUpdate({
+                    _id: socket.classId
+                },
+                {
+                    $pull: { currentMembers: { studentName : socket.studentName} }
+                },
+                {
+                    new: true
+                }
+            );
+            console.log(meetingInfo?.currentMembers)
+        }
+        if (socket.classId) {
+            socket.leave(socket.classId);
         }
     });
 
@@ -28,7 +55,7 @@ module.exports = function (wsServer, socket, app) {
 
     socket.on("draw:teacher", async (data) => {
         console.log('client --------> server draw event')
-        socket.broadcast.to(socket._id).emit("draw:teacher", data);
+        socket.broadcast.to(socket.classId).emit("draw:teacher", data);
         // console.log(data)
         const drawData = {
             pageNum: data.pageNum,
@@ -43,23 +70,23 @@ module.exports = function (wsServer, socket, app) {
     });
 
     socket.on("clearDrawingEvents", async (data) => {
-        // res = await dbModels.Doc.findOne({ '_id': data.docId }, {'_id':false,'meetingId':true})
+        res = await dbModels.Doc.findOne({ '_id': data.docId }, {'_id':false,'meetingId':true})
 
-        socket.broadcast.to(socket.meetingId).emit("clearDrawingEvents", data);
+        socket.broadcast.to(socket.classId).emit("clearDrawingEvents", data);
 
-        // result = await dbModels.Doc.findOneAndUpdate(
-        //     {
-        //         _id: data.docId,
-        //         // 'drawingEventSet.pageNum' : req.query.currentPage
-        //     },
-        //     {
-        //         $pull: {
-        //             drawingEventSet: {
-        //                 pageNum: data.currentPage,
-        //             },
-        //         },
-        //     }
-        // );
+        result = await dbModels.Doc.findOneAndUpdate(
+            {
+                _id: data.docId,
+                // 'drawingEventSet.pageNum' : req.query.currentPage
+            },
+            {
+                $pull: {
+                    drawingEventSet: {
+                        pageNum: data.currentPage,
+                    },
+                },
+            }
+        );
     });
 
     socket.on("change:pdfNum", (data) => {

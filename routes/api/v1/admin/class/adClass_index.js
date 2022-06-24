@@ -78,6 +78,7 @@ const upload = multer({
     Class 
 -----------------------------------*/
 router.post('/addClass', adClassCtrl.addClass);
+router.get('/getClassInfo', adClassCtrl.getClassInfo);
 router.get('/getClass', adClassCtrl.getClass);
 router.post('/upload/:classId', upload.any(), adClassCtrl.upload);
 router.get('/documentInfo', adClassCtrl.documentInfo);
