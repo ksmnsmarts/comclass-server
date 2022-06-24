@@ -40,5 +40,5 @@ const upload = multer({ storage });
 
 router.get('/getClass', classCtrl.getClass);
 router.get('/documentInfo', classCtrl.documentInfo);
-
+router.get('/getPdfFile', classCtrl.getPdfFile);
 module.exports = router;
