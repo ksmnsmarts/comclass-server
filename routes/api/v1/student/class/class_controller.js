@@ -90,7 +90,6 @@ exports.joinClass = async (req, res) => {
     const dbModels = global.DB_MODELS;
 
     const data = req.body;
-    console.log(data)
 
     const criteria = {
         '_id': data.meeting._id
@@ -145,7 +144,6 @@ exports.documentInfo = async (req, res) => {
     const dbModels = global.DB_MODELS;
 
     const data = req.query;
-    console.log(data)
     const criteria = {
         classId: data.classId
     }
@@ -189,10 +187,7 @@ exports.getPdfFile = async (req, res) => {
     }
 
     await dbModels.Doc.findOne(criteria).then((result) => {
-        console.log(result)
         const key = result.saveKey;
-        console.log(bucket)
-        console.log(key)
         res.attachment(key);
         var file = s3.getObject({
             Bucket: bucket,

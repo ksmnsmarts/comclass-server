@@ -133,12 +133,10 @@ const socketComclass = wsServer.of('/socketComclass');
 -----------------------------------------------*/
 const drawing = require('./controllers/comclass/socketHandler-drawing.js')
 
+
 socketComclass.on('connection', (socket) => {
     drawing(wsServer, socket, app )
 });
-
-
-
 
 
 
