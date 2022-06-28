@@ -79,55 +79,6 @@ exports.getClassInfo = async (req, res) => {
 
 }
 
-// 수업 참가하기
-exports.joinClass = async (req, res) => {
-    console.log(`
---------------------------------------------------
-  User Profile: req.decoded._id
-  router.get('/joinClass', classCtrl.joinClass);
---------------------------------------------------`);
-
-    const dbModels = global.DB_MODELS;
-
-    const data = req.body;
-
-    const criteria = {
-        '_id': data.meeting._id
-    };
-
-    const student = {
-        studentName : data.studentName
-    }
-
-
-    try {
-        const meetingInfo = await dbModels.Meeting.findOneAndUpdate(criteria,
-            { 
-                $push: { currentMembers: student } 
-            }, 
-            {
-                new: true
-            }
-        );
-
-        console.log(meetingInfo)
-
-        if (!meetingInfo) {
-            return res.status(401).send({
-                message: 'An error has occurred'
-            });
-        }
-
-        return res.send(
-            meetingInfo
-        );
-
-    } catch (err) {
-        console.log(err);
-        return res.status(500).send('db Error');
-    }
-
-}
 
 
 /**

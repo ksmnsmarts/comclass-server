@@ -1,3 +1,6 @@
+const e = require("express");
+const { joinClass } = require("../../routes/api/v1/student/class/class_controller");
+
 module.exports = function (wsServer, socket, app) {
     const dbModels = global.DB_MODELS;
 
@@ -5,7 +8,7 @@ module.exports = function (wsServer, socket, app) {
 
 
     // join room
-    socket.on("join:class", (data) => {
+    socket.on("join:class", async (data) => {
         console.log("join Class:", data.subject);
         socket.join(data._id);
         socket.classId = data._id;
@@ -13,17 +16,30 @@ module.exports = function (wsServer, socket, app) {
             socket.teacher = data.teacher
             console.log("teacher:", data.teacher)
         }
+		
         if (data.studentName) {
+			meetingInfo = await dbModels.Meeting.findOneAndUpdate({
+				_id: socket.classId
+			},
+				{
+					$push: { currentMembers: { studentName: data.studentName } }
+				},
+				{
+					new: true
+				}
+			);
             socket.studentName = data.studentName
             console.log("studentName:", data.studentName)
-        }
+			socketComclass.to(socket.classId).emit("update:classInfo", meetingInfo);
+        } else {
+			socketComclass.to(socket.classId).emit("update:classInfo", data);
+		}
 		
-		socketComclass.to(socket.classId).emit("update:classInfo", data);
+		
 
         const userCount = socket.adapter.rooms.get(socket.classId)?.size;
 
-        console.log(" ( teacher <-- student ) 'studentCount'")
-        console.log(socket.adapter.rooms.get(socket.classId))
+		console.log("current member number:", userCount)
         // 자기 자신 포함 같은 room에 있는 사람들에게 현재 접속자 수 전달
         socketComclass.to(socket.classId).emit("studentCount", userCount);
     });
@@ -68,14 +84,14 @@ module.exports = function (wsServer, socket, app) {
                     new: true
                 }
             );
-            console.log(meetingInfo?.currentMembers)
+			console.log("currentMembers: ", meetingInfo?.currentMembers)
+			socketComclass.to(socket.classId).emit("update:classInfo", meetingInfo);
         }
 
         if (socket.classId) {
             socket.leave(socket.classId);
         }
-        console.log(socket.adapter.rooms.get(socket.classId))
-
+	
         const userCount = socket.adapter.rooms.get(socket.classId)?.size;
 
         // 자기 자신 포함 같은 room에 있는 사람들에게 현재 접속자 수 전달
