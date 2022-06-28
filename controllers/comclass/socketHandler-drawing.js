@@ -9,6 +9,8 @@ module.exports = function (wsServer, socket, app) {
         console.log("join Class:", data.subject);
         socket.join(data._id);
         socket.classId = data._id;
+        socket.currentMembers = data.currentMembers
+        console.log('data----------->', data)
         if (data.teacher) {
             socket.teacher = data.teacher
             console.log("teacher:", data.teacher)
@@ -22,12 +24,16 @@ module.exports = function (wsServer, socket, app) {
 
         const userCount = socket.adapter.rooms.get(socket.classId)?.size;
 
-        console.log(" ( teacher <-- student ) 'studentCount'")
-        console.log(socket.adapter.rooms.get(socket.classId))
         // 자기 자신 포함 같은 room에 있는 사람들에게 현재 접속자 수 전달
         socketComclass.to(socket.classId).emit("studentCount", userCount);
     });
 
+
+    socket.on('begin:monitoring', () => {
+        console.log(" ( teacher <-- student ) 'begin:monitoring'");
+
+        socketComclass.to(socket.classId).emit("update:studentList", socket.currentMembers);
+    })
 
 
 
@@ -74,8 +80,11 @@ module.exports = function (wsServer, socket, app) {
         if (socket.classId) {
             socket.leave(socket.classId);
         }
-        console.log(socket.adapter.rooms.get(socket.classId))
 
+        socketComclass.to(socket.classId).emit("update:classInfo", data);
+
+
+        console.log(socket.adapter.rooms.get(socket.classId))
         const userCount = socket.adapter.rooms.get(socket.classId)?.size;
 
         // 자기 자신 포함 같은 room에 있는 사람들에게 현재 접속자 수 전달
