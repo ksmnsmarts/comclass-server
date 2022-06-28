@@ -3,12 +3,13 @@ module.exports = function (wsServer, socket, app) {
 
     const socketComclass = wsServer.of("/socketComclass");
 
+
+    // join room
     socket.on("join:class", (data) => {
-        console.log(data)
         console.log("join Class:", data.subject);
         socket.join(data._id);
         socket.classId = data._id;
-        if(data.teacher){
+        if (data.teacher) {
             socket.teacher = data.teacher
             console.log("teacher:", data.teacher)
         }
@@ -17,25 +18,49 @@ module.exports = function (wsServer, socket, app) {
             console.log("studentName:", data.studentName)
         }
 
-        const userCount = socket.adapter.rooms.get(data._id)?.size;
+        const userCount = socket.adapter.rooms.get(socket.classId)?.size;
 
+        console.log(" ( teacher <-- student ) 'studentCount'")
+        console.log(socket.adapter.rooms.get(socket.classId))
         // 자기 자신 포함 같은 room에 있는 사람들에게 현재 접속자 수 전달
-        socketComclass.to(data._id).emit("studentCount", userCount);
-
+        socketComclass.to(socket.classId).emit("studentCount", userCount);
     });
 
+
+
+
+    // monitoring
+    socket.on('send:monitoringCanvas', (data) => {
+		console.log(" ( teacher <-- student ) 'send:monitoringCanvas'")
+    
+        var sendData = {
+            classId    : socket.classId,
+            // drawingEvent  : drawingEvent,
+            documentInfo: data.documentInfo,
+            pageNum     : data.pageInfo,
+            studentName: data.studentName
+        };
+
+        socketComclass.to(socket.classId).emit("send:monitoringCanvas", sendData);
+	});
+
+
+
+
+
+    // disconnect
     socket.on("disconnect", async function () {
         console.log("\n ---> class:disconnected:", socket.classId);
         if (!socket.studentName) {
             console.log("disconnect teacher: ", socket.teacher)
         }
-        if (socket.studentName){
+        if (socket.studentName) {
             console.log("disconnect student: ", socket.studentName)
             const meetingInfo = await dbModels.Meeting.findOneAndUpdate({
-                    _id: socket.classId
-                },
+                _id: socket.classId
+            },
                 {
-                    $pull: { currentMembers: { studentName : socket.studentName} }
+                    $pull: { currentMembers: { studentName: socket.studentName } }
                 },
                 {
                     new: true
@@ -47,6 +72,7 @@ module.exports = function (wsServer, socket, app) {
         if (socket.classId) {
             socket.leave(socket.classId);
         }
+        console.log(socket.adapter.rooms.get(socket.classId))
 
         const userCount = socket.adapter.rooms.get(socket.classId)?.size;
 
@@ -81,7 +107,7 @@ module.exports = function (wsServer, socket, app) {
     });
 
     socket.on("clearDrawingEvents", async (data) => {
-        res = await dbModels.Doc.findOne({ '_id': data.docId }, {'_id':false,'meetingId':true})
+        res = await dbModels.Doc.findOne({ '_id': data.docId }, { '_id': false, 'meetingId': true })
 
         socket.broadcast.to(socket.classId).emit("clearDrawingEvents", data);
 
