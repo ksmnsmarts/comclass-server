@@ -48,14 +48,16 @@ module.exports = function (wsServer, socket, app) {
     });
 
 
+
+
+
+    // monitoring
     socket.on('begin:monitoring', () => {
         console.log(" ( teacher <-- student ) 'begin:monitoring'");
 
         socketComclass.to(socket.classId).emit("begin:monitoring", '');
     })
-
-
-
+    
     // monitoring
     socket.on('send:monitoringCanvas', (data) => {
 		console.log(" ( teacher <-- student ) 'send:monitoringCanvas'")
@@ -68,7 +70,6 @@ module.exports = function (wsServer, socket, app) {
             studentName: data.studentName
         };
 
-        console.log(data)
 
         socketComclass.to(socket.classId).emit("send:monitoringCanvas", data);
 	});
