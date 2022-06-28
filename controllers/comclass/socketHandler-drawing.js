@@ -17,6 +17,8 @@ module.exports = function (wsServer, socket, app) {
             socket.studentName = data.studentName
             console.log("studentName:", data.studentName)
         }
+		
+		socketComclass.to(socket.classId).emit("update:classInfo", data);
 
         const userCount = socket.adapter.rooms.get(socket.classId)?.size;
 
