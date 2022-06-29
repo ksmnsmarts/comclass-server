@@ -137,6 +137,17 @@ module.exports = function (wsServer, socket, app) {
         }
     });
 
+
+    // 모니터링모드의 학생이 그린 그림 선생님에게 그리기
+    socket.on("send:monitoringCanvasDrawEvent", async (data) => {
+        console.log('student --------> teacher draw event')
+        socket.broadcast.to(socket.classId).emit("send:monitoringCanvasDrawEvent", data);
+    });
+    
+
+
+
+
     socket.on("clearDrawingEvents", async (data) => {
         res = await dbModels.Doc.findOne({ '_id': data.docId }, { '_id': false, 'meetingId': true })
 
