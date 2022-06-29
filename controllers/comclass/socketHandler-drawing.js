@@ -103,7 +103,6 @@ module.exports = function (wsServer, socket, app) {
         socket.to(socket_id).emit("begin:guidance", docNum, numPages) //특정 socketid에게만 전송
     });
 
-    socket.on
 
 
     // disconnect
