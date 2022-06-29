@@ -12,6 +12,9 @@ module.exports = function (wsServer, socket, app) {
         console.log("join Class:", data.subject);
         socket.join(data._id);
         socket.classId = data._id;
+        socket.currentMembers = data.currentMembers
+
+
         if (data.teacher) {
             socket.teacher = data.teacher
             console.log("teacher:", data.teacher)
@@ -47,6 +50,14 @@ module.exports = function (wsServer, socket, app) {
 
 
 
+
+    // monitoring
+    socket.on('begin:monitoring', () => {
+        console.log(" ( teacher <-- student ) 'begin:monitoring'");
+
+        socketComclass.to(socket.classId).emit("begin:monitoring", '');
+    })
+    
     // monitoring
     socket.on('send:monitoringCanvas', (data) => {
 		console.log(" ( teacher <-- student ) 'send:monitoringCanvas'")
@@ -59,7 +70,8 @@ module.exports = function (wsServer, socket, app) {
             studentName: data.studentName
         };
 
-        socketComclass.to(socket.classId).emit("send:monitoringCanvas", sendData);
+
+        socketComclass.to(socket.classId).emit("send:monitoringCanvas", data);
 	});
 
 
