@@ -132,7 +132,7 @@ module.exports = function (wsServer, socket, app) {
         // tool이 포인터이면 드로잉 이벤를 저장하지 않는다.
         var res = {};
 		// if (data.drawingEvent.tool.type != "pointer" && data.participantName == 'teacher' && data.mode == 'syncMode') {
-        if (data.drawingEvent.tool.type != "pointer" && data.participantName == 'teacher')  {
+		if (data.drawingEvent.tool.type != "pointer" && data.participantName == 'teacher' && data.drawingEvent.syncMode != 'oneOnOneMode')  {
             res = await dbModels.Doc.findOneAndUpdate({ _id: data.docId }, { $push: { drawingEventSet: drawData } });
         }
     });
