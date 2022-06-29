@@ -1,6 +1,9 @@
 const e = require("express");
 const { joinClass } = require("../../routes/api/v1/student/class/class_controller");
 
+var rooms = [];
+let room;
+
 module.exports = function (wsServer, socket, app) {
     const dbModels = global.DB_MODELS;
 
@@ -11,40 +14,55 @@ module.exports = function (wsServer, socket, app) {
     socket.on("join:class", async (data) => {
         console.log("join Class:", data.subject);
         socket.join(data._id);
+
         socket.classId = data._id;
         socket.currentMembers = data.currentMembers
 
+        ///////////////////////////////////////////////////////////
+        // Create Room
+        room = data._id;
+        if (rooms[room] == undefined) {
+            console.log('room create :' + room);
+            rooms[room] = new Object();
+            rooms[room].socket_ids = new Object();
+        }
+        // Store current user's nickname and socket.id to MAP
+        rooms[room].socket_ids[data.studentName] = socket.id
+        ////////////////////////////////////////////////////////////
 
         if (data.teacher) {
             socket.teacher = data.teacher
             console.log("teacher:", data.teacher)
         }
-		
+
         if (data.studentName) {
-			meetingInfo = await dbModels.Meeting.findOneAndUpdate({
-				_id: socket.classId
-			},
-				{
-					$push: { currentMembers: { studentName: data.studentName } }
-				},
-				{
-					new: true
-				}
-			);
+            meetingInfo = await dbModels.Meeting.findOneAndUpdate({
+                _id: socket.classId
+            },
+                {
+                    $push: { currentMembers: { studentName: data.studentName } }
+                },
+                {
+                    new: true
+                }
+            );
             socket.studentName = data.studentName
             console.log("studentName:", data.studentName)
-			socketComclass.to(socket.classId).emit("update:classInfo", meetingInfo);
+
+
+            socketComclass.to(socket.classId).emit("update:classInfo", meetingInfo);
         } else {
-			socketComclass.to(socket.classId).emit("update:classInfo", data);
-		}
-		
-		
+            socketComclass.to(socket.classId).emit("update:classInfo", data);
+        }
 
         const userCount = socket.adapter.rooms.get(socket.classId)?.size;
 
-		console.log("current member number:", userCount)
+        console.log("current member number:", userCount)
         // 자기 자신 포함 같은 room에 있는 사람들에게 현재 접속자 수 전달
         socketComclass.to(socket.classId).emit("studentCount", userCount);
+
+
+
     });
 
 
@@ -57,24 +75,33 @@ module.exports = function (wsServer, socket, app) {
 
         socketComclass.to(socket.classId).emit("begin:monitoring", '');
     })
-    
+
     // monitoring
     socket.on('send:monitoringCanvas', (data) => {
-		console.log(" ( teacher <-- student ) 'send:monitoringCanvas'")
-    
+        console.log(" ( teacher <-- student ) 'send:monitoringCanvas'")
+
         var sendData = {
-            classId    : socket.classId,
+            classId: socket.classId,
             // drawingEvent  : drawingEvent,
             documentInfo: data.documentInfo,
-            pageNum     : data.pageInfo,
+            pageNum: data.pageInfo,
             studentName: data.studentName
         };
 
-
         socketComclass.to(socket.classId).emit("send:monitoringCanvas", data);
-	});
+    });
 
 
+    /*------------------------------------------        
+        begin Guidance             
+    -------------------------------------------*/
+    socket.on('begin:guidance', (studentName, docNum, numPages) => {
+        console.log("\n ( teacher --> student ) 'begin:guidance'")
+        console.log(studentName, docNum, numPages)
+
+        socket_id = rooms[room].socket_ids[studentName]; // room 안에 있는 특정 socket 찾기
+        socket.to(socket_id).emit("begin:guidance", docNum, numPages) //특정 socketid에게만 전송
+    });
 
 
 
@@ -96,14 +123,14 @@ module.exports = function (wsServer, socket, app) {
                     new: true
                 }
             );
-			console.log("currentMembers: ", meetingInfo?.currentMembers)
-			socketComclass.to(socket.classId).emit("update:classInfo", meetingInfo);
+            console.log("currentMembers: ", meetingInfo?.currentMembers)
+            socketComclass.to(socket.classId).emit("update:classInfo", meetingInfo);
         }
 
         if (socket.classId) {
             socket.leave(socket.classId);
         }
-	
+
         const userCount = socket.adapter.rooms.get(socket.classId)?.size;
 
         // 자기 자신 포함 같은 room에 있는 사람들에게 현재 접속자 수 전달
@@ -131,8 +158,8 @@ module.exports = function (wsServer, socket, app) {
 
         // tool이 포인터이면 드로잉 이벤를 저장하지 않는다.
         var res = {};
-		// if (data.drawingEvent.tool.type != "pointer" && data.participantName == 'teacher' && data.mode == 'syncMode') {
-        if (data.drawingEvent.tool.type != "pointer" && data.participantName == 'teacher')  {
+        // if (data.drawingEvent.tool.type != "pointer" && data.participantName == 'teacher' && data.mode == 'syncMode') {
+        if (data.drawingEvent.tool.type != "pointer" && data.participantName == 'teacher') {
             res = await dbModels.Doc.findOneAndUpdate({ _id: data.docId }, { $push: { drawingEventSet: drawData } });
         }
     });
@@ -143,7 +170,7 @@ module.exports = function (wsServer, socket, app) {
         console.log('student --------> teacher draw event')
         socket.broadcast.to(socket.classId).emit("send:monitoringCanvasDrawEvent", data);
     });
-    
+
 
 
 
