@@ -26,16 +26,18 @@ module.exports = function (wsServer, socket, app) {
             rooms[room] = new Object();
             rooms[room].socket_ids = new Object();
         }
-        // Store current user's nickname and socket.id to MAP
-        rooms[room].socket_ids[data.studentName] = socket.id
         ////////////////////////////////////////////////////////////
 
         if (data.teacher) {
+			// Store current user's nickname and socket.id to MAP
+			rooms[room].socket_ids[data.teacher] = socket.id
             socket.teacher = data.teacher
             console.log("teacher:", data.teacher)
         }
 
         if (data.studentName) {
+			// Store current user's nickname and socket.id to MAP
+			rooms[room].socket_ids[data.studentName] = socket.id
             meetingInfo = await dbModels.Meeting.findOneAndUpdate({
                 _id: socket.classId
             },
@@ -95,13 +97,26 @@ module.exports = function (wsServer, socket, app) {
     /*------------------------------------------        
         begin Guidance             
     -------------------------------------------*/
-    socket.on('begin:guidance', (studentName, docNum, numPages) => {
+    socket.on('begin:guidance', (name) => {
         console.log("\n ( teacher --> student ) 'begin:guidance'")
-        console.log(studentName, docNum, numPages)
-
-        socket_id = rooms[room].socket_ids[studentName]; // room 안에 있는 특정 socket 찾기
-        socket.to(socket_id).emit("begin:guidance", docNum, numPages) //특정 socketid에게만 전송
+		socket_id = rooms[room].socket_ids[name]; // room 안에 있는 특정 socket 찾기
+        socket.to(socket_id).emit("get:studentViewInfo") //특정 socketid에게만 전송
     });
+
+	/*------------------------------------------        
+	set:studentViewInfo           
+	-------------------------------------------*/
+	socket.on('set:studentViewInfo', (currentDocNum, currentPage) => {
+		console.log('currentDocNum: ', currentDocNum)
+		console.log('currentPage: ', currentPage)
+		console.log("\n ( student --> teacher ) 'set:studentViewInfo'")
+		socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
+		const data = {
+			currentDocNum: currentDocNum,
+			currentPage: currentPage
+		}
+		socket.to(socket_id).emit("teacher:studentViewInfo", data) //특정 socketid에게만 전송
+	});
 
 
 
@@ -110,6 +125,7 @@ module.exports = function (wsServer, socket, app) {
         console.log("\n ---> class:disconnected:", socket.classId);
         if (!socket.studentName) {
             console.log("disconnect teacher: ", socket.teacher)
+			delete rooms[room].socket_ids[socket.teacher];
         }
         if (socket.studentName) {
             console.log("disconnect student: ", socket.studentName)
@@ -125,6 +141,7 @@ module.exports = function (wsServer, socket, app) {
             );
             console.log("currentMembers: ", meetingInfo?.currentMembers)
             socketComclass.to(socket.classId).emit("update:classInfo", meetingInfo);
+			delete rooms[room].socket_ids[socket.studentName];
         }
 
         if (socket.classId) {
