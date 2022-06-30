@@ -14,7 +14,7 @@ module.exports = function (wsServer, socket, app) {
     socket.on("join:class", async (data) => {
         console.log("join Class:", data.subject);
         socket.join(data._id);
-
+        console.log(data)
         socket.classId = data._id;
         socket.currentMembers = data.currentMembers
 
@@ -28,11 +28,12 @@ module.exports = function (wsServer, socket, app) {
         }
         ////////////////////////////////////////////////////////////
 
-        if (data.teacher) {
+        socket.teacher = data.teacher
+        if (data.role == 'teacher') {
 			// Store current user's nickname and socket.id to MAP
 			rooms[room].socket_ids[data.teacher] = socket.id
-            socket.teacher = data.teacher
             console.log("teacher:", data.teacher)
+            console.log(rooms[room].socket_ids[data.teacher])
         }
 
         if (data.studentName) {
@@ -50,7 +51,7 @@ module.exports = function (wsServer, socket, app) {
             );
             socket.studentName = data.studentName
             console.log("studentName:", data.studentName)
-
+            console.log(rooms[room].socket_ids[socket.studentName])
 
             socketComclass.to(socket.classId).emit("update:classInfo", meetingInfo);
         } else {
@@ -111,11 +112,15 @@ module.exports = function (wsServer, socket, app) {
 		console.log('currentPage: ', currentPage)
 		console.log("\n ( student --> teacher ) 'set:studentViewInfo'")
 		socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
+
+        console.log(rooms[room].socket_ids[socket.studentName])
+        console.log(socket_id)
 		const data = {
 			currentDocNum: currentDocNum,
 			currentPage: currentPage
 		}
 		socket.to(socket_id).emit("teacher:studentViewInfo", data) //특정 socketid에게만 전송
+        console.log("teacher:studentViewInfo :", data )
 	});
 
 
