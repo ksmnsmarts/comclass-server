@@ -113,8 +113,8 @@ module.exports = function (wsServer, socket, app) {
 		console.log("\n ( student --> teacher ) 'set:studentViewInfo'")
 		socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
 
-        console.log(rooms[room].socket_ids[socket.studentName])
-        console.log(socket_id)
+        console.log('student in room : ',rooms[room].socket_ids[socket.studentName])
+        console.log('teacher in room : ',socket_id)
 		const data = {
 			currentDocNum: currentDocNum,
 			currentPage: currentPage
