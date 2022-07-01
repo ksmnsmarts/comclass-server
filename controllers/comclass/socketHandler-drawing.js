@@ -101,6 +101,7 @@ module.exports = function (wsServer, socket, app) {
     socket.on('begin:guidance', (name) => {
         console.log("\n ( teacher --> student ) 'begin:guidance'")
 		socket_id = rooms[room].socket_ids[name]; // room 안에 있는 특정 socket 찾기
+		socket.oneOnOneTarget = name; // 소켓에 1대1 모드 상대 이름 저장
         socket.to(socket_id).emit("get:studentViewInfo") //특정 socketid에게만 전송
     });
 
@@ -174,9 +175,43 @@ module.exports = function (wsServer, socket, app) {
     });
 
     socket.on("draw:teacher", async (data) => {
-        console.log('client --------> server draw event')
-        socket.broadcast.to(socket.classId).emit("draw:teacher", data);
-        // console.log(data)
+		console.log('data : ', data)
+		console.log('data.participantName : ', data.participantName)
+		console.log('data.drawingEvent.mode : ', data.drawingEvent.mode)
+		// switch (data) {
+		// 	case data.participantName == 'teacher' && data.drawingEvent.mode == 'oneOnOneMode':
+		// 		socket_id = rooms[room].socket_ids[socket.oneOnOneTarget];
+		// 		console.log('socket_id : ', socket_id)
+		// 		console.log('socket.oneOnOneTarget : ', socket.oneOnOneTarget)
+		// 		socket.to(socket_id).emit("draw:teacher", data)
+		// 		break;
+		// 	case data.participantName != 'teacher' && data.drawingEvent.mode == 'oneOnOneMode':
+		// 		socket_id = rooms[room].socket_ids[socket.teacher];
+		// 		console.log('socket_id : ', socket_id)
+		// 		console.log('socket.teacher : ', socket.teacher)
+		// 		socket.to(socket_id).emit("draw:teacher", data)
+		// 		break;
+		// 	case data.drawingEvent.mode != 'oneOnOneMode':
+		// 		socket.broadcast.to(socket.classId).emit("draw:teacher", data);
+		// 		break;
+		// }
+
+		if (data.drawingEvent.mode != 'oneOnOneMode'){
+			socket.broadcast.to(socket.classId).emit("draw:teacher", data);
+		} 
+		else if (data.participantName == 'teacher' && data.drawingEvent.mode == 'oneOnOneMode'){
+			socket_id = rooms[room].socket_ids[socket.oneOnOneTarget];
+			console.log('socket_id : ', socket_id)
+			console.log('socket.oneOnOneTarget : ', socket.oneOnOneTarget)
+			socket.to(socket_id).emit("draw:teacher", data)
+		} 
+		else if (data.participantName != 'teacher' && data.drawingEvent.mode == 'oneOnOneMode'){
+			socket_id = rooms[room].socket_ids[socket.teacher];
+			console.log('socket_id : ', socket_id)
+			console.log('socket.teacher : ', socket.teacher)
+			socket.to(socket_id).emit("draw:teacher", data)
+		}
+        // // console.log(data)
         const drawData = {
             pageNum: data.pageNum,
             drawingEvent: data.drawingEvent,
@@ -185,17 +220,17 @@ module.exports = function (wsServer, socket, app) {
         // tool이 포인터이면 드로잉 이벤를 저장하지 않는다.
         var res = {};
 		// if (data.drawingEvent.tool.type != "pointer" && data.participantName == 'teacher' && data.mode == 'syncMode') {
-		if (data.drawingEvent.tool.type != "pointer" && data.participantName == 'teacher' && data.drawingEvent.syncMode != 'oneOnOneMode')  {
+		if (data.drawingEvent.tool.type != "pointer" && data.participantName == 'teacher' && data.drawingEvent.mode != 'oneOnOneMode')  {
             res = await dbModels.Doc.findOneAndUpdate({ _id: data.docId }, { $push: { drawingEventSet: drawData } });
         }
     });
 
 
-    // 모니터링모드의 학생이 그린 그림 선생님에게 그리기
-    socket.on("send:monitoringCanvasDrawEvent", async (data) => {
-        console.log('student --------> teacher draw event')
-        socket.broadcast.to(socket.classId).emit("send:monitoringCanvasDrawEvent", data);
-    });
+    // // 모니터링모드의 학생이 그린 그림 선생님에게 그리기
+    // socket.on("send:monitoringCanvasDrawEvent", async (data) => {
+    //     console.log('student --------> teacher draw event')
+    //     socket.broadcast.to(socket.classId).emit("send:monitoringCanvasDrawEvent", data);
+    // });
 
 
 
