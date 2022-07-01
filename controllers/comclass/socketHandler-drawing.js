@@ -107,17 +107,21 @@ module.exports = function (wsServer, socket, app) {
 	/*------------------------------------------        
 	set:studentViewInfo           
 	-------------------------------------------*/
-	socket.on('set:studentViewInfo', (currentDocNum, currentPage) => {
+	socket.on('set:studentViewInfo', (currentDocId, currentDocNum, currentPage, zoomScale) => {
+		console.log('currentDocId: ', currentDocId)
 		console.log('currentDocNum: ', currentDocNum)
 		console.log('currentPage: ', currentPage)
+		console.log('zoomScale: ', zoomScale)
 		console.log("\n ( student --> teacher ) 'set:studentViewInfo'")
 		socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
 
         console.log('student in room : ',rooms[room].socket_ids[socket.studentName])
         console.log('teacher in room : ',socket_id)
 		const data = {
+			currentDocId: currentDocId,
 			currentDocNum: currentDocNum,
-			currentPage: currentPage
+			currentPage: currentPage,
+			zoomScale: zoomScale
 		}
 		socket.to(socket_id).emit("teacher:studentViewInfo", data) //특정 socketid에게만 전송
         console.log("teacher:studentViewInfo :", data )
