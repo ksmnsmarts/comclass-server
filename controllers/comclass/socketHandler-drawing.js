@@ -81,15 +81,18 @@ module.exports = function (wsServer, socket, app) {
     })
 
     // 2. 학생이 현재 바라보는 문서 정보 선생님에게 보내기
-    socket.on('studentList:sendDocInfo', (docData) => {
-     
-        docDataArray.push(docData)
-        console.log(docDataArray)        
-
-        socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
+    socket.on('studentList:sendDocInfo', async (docData) => {
+  
+        docDataArray.push(docData);
+        try {
+            console.log(docDataArray)
+            
+            socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
             // 해당 학생 monitoring 시작
-        socket.to(socket_id).emit("studentList:sendDocInfo", docDataArray) //특정 socketid에게만 전송      
-    
+            socket.to(socket_id).emit("studentList:sendDocInfo", docDataArray) //특정 socketid에게만 전송                  
+        } catch (error) {
+            console.log(error)
+        }
     })
     ////////////////////////////////////////////////////////////////////////////////////
 
@@ -135,15 +138,9 @@ module.exports = function (wsServer, socket, app) {
     set:studentViewInfo           
     -------------------------------------------*/
     socket.on('set:studentViewInfo', (currentDocId, currentDocNum, currentPage, zoomScale) => {
-        console.log('currentDocId: ', currentDocId)
-        console.log('currentDocNum: ', currentDocNum)
-        console.log('currentPage: ', currentPage)
-        console.log('zoomScale: ', zoomScale)
         console.log("\n ( student --> teacher ) 'set:studentViewInfo'")
         socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
 
-        console.log('student in room : ', rooms[room].socket_ids[socket.studentName])
-        console.log('teacher in room : ', socket_id)
         const data = {
             studentName: socket.studentName,
             currentDocId: currentDocId,
@@ -188,11 +185,11 @@ module.exports = function (wsServer, socket, app) {
                     new: true
                 }
             );
-            console.log("currentMembers: ", meetingInfo?.currentMembers)
             socketComclass.to(socket.classId).emit("update:classInfo", meetingInfo);
             delete rooms[room].socket_ids[socket.studentName];
 
-            delete rooms[room]
+            delete rooms[room];
+            docDataArray = [];
         }
 
         if (socket.classId) {
