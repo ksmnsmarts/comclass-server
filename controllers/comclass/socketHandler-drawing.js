@@ -281,12 +281,21 @@ module.exports = function (wsServer, socket, app) {
 
     /*-------------------------------------------
     doc 전환 하는 경우 sync
- ---------------------------------------------*/
+ 	---------------------------------------------*/
     socket.on("sync:doc", (data) => {
-        console.log("page to sync: ", data.docId);
-        socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
-        socket.to(socket_id).emit("sync:docChange", data.docId);
+		console.log("page to sync: ", data.docId);
+		socket.broadcast.to(data.meetingId).emit("sync:docChange", data.docId);
     });
+
+	/*-------------------------------------------
+	doc 전환 하는 경우 oneOneOneMode
+	---------------------------------------------*/
+	socket.on("oneOnOneMode:doc", (data) => {
+		console.log("page to sync: ", data.docId);
+		socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
+		socket.to(socket_id).emit("sync:docChange", data.docId);
+	});
+
 
     /*-------------------------------------------
     page 전환 하는 경우 sync
@@ -296,6 +305,8 @@ module.exports = function (wsServer, socket, app) {
         console.log("page to sync: ", data.pageNum);
         socket.broadcast.to(data.meetingId).emit("sync:pageChange", data);
     });
+
+	
 
     /*-------------------------------------------
     doc. List (문서 목록으로) 하는 경우 sync
