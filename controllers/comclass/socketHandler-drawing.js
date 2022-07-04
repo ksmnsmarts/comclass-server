@@ -101,8 +101,13 @@ module.exports = function (wsServer, socket, app) {
     socket.on('begin:guidance', (name) => {
         console.log("\n ( teacher --> student ) 'begin:guidance'")
 		socket_id = rooms[room].socket_ids[name]; // room 안에 있는 특정 socket 찾기
+
+        // 기존 학생 monitoring 취소 먼저
+        socket.broadcast.to(socket.classId).emit("cancel:guidance");
+		
 		socket.oneOnOneTarget = name; // 소켓에 1대1 모드 상대 이름 저장
-        socket.to(socket_id).emit("get:studentViewInfo") //특정 socketid에게만 전송
+        // 해당 학생 monitoring 시작
+        socket.to(socket_id).emit("get:studentViewInfo") //특정 socketid에게만 전송        
     });
 
 	/*------------------------------------------        
@@ -119,6 +124,7 @@ module.exports = function (wsServer, socket, app) {
         console.log('student in room : ',rooms[room].socket_ids[socket.studentName])
         console.log('teacher in room : ',socket_id)
 		const data = {
+            studentName: socket.studentName,
 			currentDocId: currentDocId,
 			currentDocNum: currentDocNum,
 			currentPage: currentPage,
@@ -127,6 +133,18 @@ module.exports = function (wsServer, socket, app) {
 		socket.to(socket_id).emit("teacher:studentViewInfo", data) //특정 socketid에게만 전송
         console.log("teacher:studentViewInfo :", data )
 	});
+
+
+    /*------------------------------------------        
+	    cancel:monitoring           
+	-------------------------------------------*/
+    socket.on('cancel:monitoring', () => {
+        console.log("\n ( teacher --> student ) 'cancel:monitoring'")
+		socket.oneOnOneTarget='';
+        // 학생 monitoring 취소
+        socket.broadcast.to(socket.classId).emit("cancel:guidance");
+    });
+
 
 
 
@@ -266,7 +284,8 @@ module.exports = function (wsServer, socket, app) {
  ---------------------------------------------*/
     socket.on("sync:doc", (data) => {
         console.log("page to sync: ", data.docId);
-        socket.broadcast.to(data.meetingId).emit("sync:docChange", data.docId);
+        socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
+        socket.to(socket_id).emit("sync:docChange", data.docId);
     });
 
     /*-------------------------------------------
@@ -283,6 +302,7 @@ module.exports = function (wsServer, socket, app) {
  ---------------------------------------------*/
     socket.on("sync:FileList", (data) => {
         console.log("back to FileList sync: ");
-        socket.broadcast.to(data.meetingId).emit("sync:backToFileList");
+        socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
+        socket.to(socket_id).emit("sync:backToFileList");
     });
 };
