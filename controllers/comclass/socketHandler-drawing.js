@@ -84,13 +84,12 @@ module.exports = function (wsServer, socket, app) {
     socket.on('studentList:sendDocInfo', (docData) => {
      
         docDataArray.push(docData)
-        console.log('-------------studentList:sendDocInfo--------------')
-        console.log(docDataArray)
+        console.log(docDataArray)        
 
         socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
-
-        // 해당 학생 monitoring 시작
+            // 해당 학생 monitoring 시작
         socket.to(socket_id).emit("studentList:sendDocInfo", docDataArray) //특정 socketid에게만 전송      
+    
     })
     ////////////////////////////////////////////////////////////////////////////////////
 
