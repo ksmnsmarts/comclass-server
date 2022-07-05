@@ -119,21 +119,26 @@ module.exports = function (wsServer, socket, app) {
 
 
     /*------------------------------------------        
-        begin Guidance             
+    * 1:1 모드
+    * 1) 학생에게 1:1 모드라고 알림
     -------------------------------------------*/
     socket.on('begin:guidance', (name) => {
-        console.log("\n ( teacher --> student ) 'begin:guidance'")
+        console.log("\n ( teacher --> student ) '1. 1:1 모드 시작 begin:guidance'")
         socket_id = rooms[room].socket_ids[name]; // room 안에 있는 특정 socket 찾기
+        console.log(name)
 
         // 기존 학생 monitoring 취소 먼저
+        console.log("\n ( teacher --> student ) '2. 기존 1:1 모드 취소")
         socket.broadcast.to(socket.classId).emit("cancel:guidance");
 
         // 해당 학생 monitoring 시작
+        console.log("\n ( server --> student ) '3. 학생에게 현재 페이지 정보 전송 요청")
         socket.to(socket_id).emit("get:studentViewInfo") //특정 socketid에게만 전송        
     });
 
     /*------------------------------------------        
-    set:studentViewInfo           
+    * 1:1 모드 
+    * 2) 학생에게 받은 현재 페이지 정보 선생님에게 전송   
     -------------------------------------------*/
     socket.on('set:studentViewInfo', (currentDocId, currentDocNum, currentPage, zoomScale) => {
         console.log("\n ( student --> teacher ) 'set:studentViewInfo'")
@@ -152,7 +157,8 @@ module.exports = function (wsServer, socket, app) {
 
 
     /*------------------------------------------        
-        cancel:monitoring           
+    * 1:1 모드 
+    * 3) 1:1 모드 종료
     -------------------------------------------*/
     socket.on('cancel:monitoring', () => {
         console.log("\n ( teacher --> student ) 'cancel:monitoring'")
@@ -185,9 +191,6 @@ module.exports = function (wsServer, socket, app) {
             );
             socketComclass.to(socket.classId).emit("update:classInfo", meetingInfo);
             delete rooms[room].socket_ids[socket.studentName];
-
-            delete rooms[room];
-            docDataArray = [];
         }
 
         if (socket.classId) {
