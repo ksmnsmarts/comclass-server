@@ -3,7 +3,6 @@ const { joinClass } = require("../../routes/api/v1/student/class/class_controlle
 
 var rooms = [];
 let room;
-let docDataArray = [];
 
 module.exports = function (wsServer, socket, app) {
     const dbModels = global.DB_MODELS;
@@ -76,20 +75,19 @@ module.exports = function (wsServer, socket, app) {
     ************************************************************/
     // 1. 선생님이 studentList component에 들어오면 학생들에게 학생들의 문서 정보를 요청.
     socket.on('studentList:docInfo', () => {
-        docDataArray = [];
+        console.log("1. 선생님이 studentList component에 들어오면 학생들에게 학생들의 문서 정보를 요청.")
         socket.broadcast.to(socket.classId).emit("studentList:getDocInfo");
     })
 
     // 2. 학생이 현재 바라보는 문서 정보 선생님에게 보내기
     socket.on('studentList:sendDocInfo', async (docData) => {
-  
-        docDataArray.push(docData);
         try {
-            console.log(docDataArray)
-            
+            console.log("2. 학생이 현재 바라보는 문서 정보 선생님에게 보내기")
+            console.log("studentList:sendDocInfo:", docData)
+
             socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
-            // 해당 학생 monitoring 시작
-            socket.to(socket_id).emit("studentList:sendDocInfo", docDataArray) //특정 socketid에게만 전송                  
+            // 2. 학생이 현재 바라보는 문서 정보 선생님에게 보내기
+            socket.to(socket_id).emit("studentList:sendDocInfo", docData) //특정 socketid에게만 전송                  
         } catch (error) {
             console.log(error)
         }
@@ -98,11 +96,11 @@ module.exports = function (wsServer, socket, app) {
 
 
     // monitoring
-    socket.on('begin:monitoring', () => {
-        console.log(" ( teacher <-- student ) 'begin:monitoring'");
+    // socket.on('begin:monitoring', () => {
+    //     console.log(" ( teacher <-- student ) 'begin:monitoring'");
 
-        socketComclass.to(socket.classId).emit("begin:monitoring", '');
-    })
+    //     socketComclass.to(socket.classId).emit("begin:monitoring", '');
+    // })
 
     // monitoring
     socket.on('send:monitoringCanvas', (data) => {
