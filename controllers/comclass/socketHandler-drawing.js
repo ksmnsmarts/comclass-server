@@ -80,27 +80,18 @@ module.exports = function (wsServer, socket, app) {
     })
 
     // 2. 학생이 현재 바라보는 문서 정보 선생님에게 보내기
-    socket.on('studentList:sendDocInfo', async (docData) => {
+    socket.on('studentList:sendDocInfo', async (docData, drawingEvent) => {
         try {
             console.log("2. 학생이 현재 바라보는 문서 정보 선생님에게 보내기")
-            console.log("studentList:sendDocInfo:", docData)
-
             socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
-            // 2. 학생이 현재 바라보는 문서 정보 선생님에게 보내기
-            socket.to(socket_id).emit("studentList:sendDocInfo", docData) //특정 socketid에게만 전송                  
+            socket.to(socket_id).emit("studentList:sendDocInfo", docData, drawingEvent.drawingEvent) //특정 socketid에게만 전송        
+
         } catch (error) {
             console.log(error)
         }
     })
     ////////////////////////////////////////////////////////////////////////////////////
 
-
-    // monitoring
-    // socket.on('begin:monitoring', () => {
-    //     console.log(" ( teacher <-- student ) 'begin:monitoring'");
-
-    //     socketComclass.to(socket.classId).emit("begin:monitoring", '');
-    // })
 
     // monitoring
     socket.on('send:monitoringCanvas', (data) => {
