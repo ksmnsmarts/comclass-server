@@ -63,40 +63,42 @@ module.exports = function (wsServer, socket, app) {
         console.log("current member number:", userCount)
         // 자기 자신 포함 같은 room에 있는 사람들에게 현재 접속자 수 전달
         socketComclass.to(socket.classId).emit("studentCount", userCount);
-
-
-
     });
 
 
-    ////////////////////////////////////////////////////////////////////////////////////
-    /************************************************************
-    * studentList doc current page info
-    ************************************************************/
-    // 1. 선생님이 studentList component에 들어오면 학생들에게 학생들의 문서 정보를 요청.
+    /*------------------------------------------
+    * 학생 리스트
+    * 선생님이 학생 리스트에 처음 들어왔을 때 학생들의 문서 데이터 받기
+    ------------------------------------------*/
+    // 1. 선생님이 student component에 들어오면 학생들에게 학생들의 문서 정보를 요청.
     socket.on('studentList:docInfo', () => {
         console.log("1. 선생님이 studentList component에 들어오면 학생들에게 학생들의 문서 정보를 요청.")
         socket.broadcast.to(socket.classId).emit("studentList:getDocInfo");
     })
 
     // 2. 학생이 현재 바라보는 문서 정보 선생님에게 보내기
-    socket.on('studentList:sendDocInfo', async (docData, drawingEvent) => {
+    socket.on('studentList:sendDocInfo', async (docData) => {
+        console.log(docData)
         try {
             console.log("2. 학생이 현재 바라보는 문서 정보 선생님에게 보내기")
             socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
-            socket.to(socket_id).emit("studentList:sendDocInfo", docData, drawingEvent.drawingEvent) //특정 socketid에게만 전송        
+            socket.to(socket_id).emit("studentList:sendDocInfo", docData) //특정 socketid에게만 전송        
 
         } catch (error) {
             console.log(error)
         }
     })
-    ////////////////////////////////////////////////////////////////////////////////////
 
 
-    // monitoring
+    /*------------------------------------------
+    * 학생 리스트
+    * 학생이 페이지를 변경했을 때 선생님에게 학생 데이터 업데이트
+    ------------------------------------------*/
     socket.on('send:monitoringCanvas', (data) => {
         console.log(" ( teacher <-- student ) 'send:monitoringCanvas'")
 
+        console.log('[data]--------------------------------------------')
+        console.log(data)
         var sendData = {
             classId: socket.classId,
             // drawingEvent  : drawingEvent,
