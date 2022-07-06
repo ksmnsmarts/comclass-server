@@ -130,6 +130,7 @@ module.exports = function (wsServer, socket, app) {
         socket.to(socket_id).emit("get:studentViewInfo") //특정 socketid에게만 전송        
     });
 
+
     /*------------------------------------------        
     * 1:1 모드 
     * 2) 학생에게 받은 현재 페이지 정보 선생님에게 전송   
@@ -138,16 +139,19 @@ module.exports = function (wsServer, socket, app) {
         console.log("\n ( student --> teacher ) 'set:studentViewInfo'")
         socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
 
+
         const data = {
             studentName: socket.studentName,
-            currentDocId: currentDocId,
-            currentDocNum: currentDocNum,
-            currentPage: currentPage,
-            zoomScale: zoomScale
-        }
-        socket.to(socket_id).emit("teacher:studentViewInfo", data) //특정 socketid에게만 전송
-        console.log("teacher:studentViewInfo :", data)
-    });
+			currentDocId: currentDocId,
+			currentDocNum: currentDocNum,
+			currentPage: currentPage,
+			zoomScale: zoomScale,
+			drawData: drawData,
+		}
+		socket.to(socket_id).emit("teacher:studentViewInfo", data) //특정 socketid에게만 전송
+        console.log("teacher:studentViewInfo :", data )
+	});
+
 
 
     /*------------------------------------------        
@@ -209,41 +213,24 @@ module.exports = function (wsServer, socket, app) {
 
     socket.on("draw:teacher", async (data) => {
 		console.log('data : ', data)
-		console.log('data.participantName : ', data.participantName)
-		console.log('data.drawingEvent.mode : ', data.drawingEvent.mode)
-		// switch (data) {
-		// 	case data.participantName == 'teacher' && data.drawingEvent.mode == 'oneOnOneMode':
-		// 		socket_id = rooms[room].socket_ids[socket.oneOnOneTarget];
-		// 		console.log('socket_id : ', socket_id)
-		// 		console.log('socket.oneOnOneTarget : ', socket.oneOnOneTarget)
-		// 		socket.to(socket_id).emit("draw:teacher", data)
-		// 		break;
-		// 	case data.participantName != 'teacher' && data.drawingEvent.mode == 'oneOnOneMode':
-		// 		socket_id = rooms[room].socket_ids[socket.teacher];
-		// 		console.log('socket_id : ', socket_id)
-		// 		console.log('socket.teacher : ', socket.teacher)
-		// 		socket.to(socket_id).emit("draw:teacher", data)
-		// 		break;
-		// 	case data.drawingEvent.mode != 'oneOnOneMode':
-		// 		socket.broadcast.to(socket.classId).emit("draw:teacher", data);
-		// 		break;
-		// }
+		console.log('data.drawingEvent.participantName : ', data.drawingEvent.participantName)
+		console.log('data.drawingEvent.oneOnOneMode : ', data.drawingEvent.oneOnOneMode)
 
-		if (data.drawingEvent.mode != 'oneOnOneMode'){
+		if (data.drawingEvent.oneOnOneMode == false){
 			socket.broadcast.to(socket.classId).emit("draw:teacher", data);
 		} 
-		else if (data.participantName == 'teacher' && data.drawingEvent.mode == 'oneOnOneMode'){
-			socket_id = rooms[room].socket_ids[socket.oneOnOneTarget];
-			console.log('socket_id : ', socket_id)
-			console.log('socket.oneOnOneTarget : ', socket.oneOnOneTarget)
-			socket.to(socket_id).emit("draw:teacher", data)
-		} 
-		else if (data.participantName != 'teacher' && data.drawingEvent.mode == 'oneOnOneMode'){
+		else if (data.drawingEvent.participantName != 'teacher' && data.drawingEvent.oneOnOneMode == true){
 			socket_id = rooms[room].socket_ids[socket.teacher];
 			console.log('socket_id : ', socket_id)
 			console.log('socket.teacher : ', socket.teacher)
 			socket.to(socket_id).emit("draw:teacher", data)
 		}
+		// else if (data.participantName == 'teacher' && data.drawingEvent.oneOnOneMode == true){
+		// 	socket_id = rooms[room].socket_ids[socket.oneOnOneTarget];
+		// 	console.log('socket_id : ', socket_id)
+		// 	console.log('socket.oneOnOneTarget : ', socket.oneOnOneTarget)
+		// 	socket.to(socket_id).emit("draw:teacher", data)
+		// } 
         // // console.log(data)
         const drawData = {
             pageNum: data.pageNum,
@@ -254,7 +241,7 @@ module.exports = function (wsServer, socket, app) {
         var res = {};
 
 		// if (data.drawingEvent.tool.type != "pointer" && data.participantName == 'teacher' && data.mode == 'syncMode') {
-		if (data.drawingEvent.tool.type != "pointer" && data.participantName == 'teacher' && data.drawingEvent.mode != 'oneOnOneMode')  {
+		if (data.drawingEvent.tool.type != "pointer" && data.drawingEvent.participantName == 'teacher' && data.drawingEvent.oneOnOneMode == false)  {
             res = await dbModels.Doc.findOneAndUpdate({ _id: data.docId }, { $push: { drawingEventSet: drawData } });
         }
     });
@@ -271,24 +258,30 @@ module.exports = function (wsServer, socket, app) {
 
 
     socket.on("clearDrawingEvents", async (data) => {
-        res = await dbModels.Doc.findOne({ '_id': data.docId }, { '_id': false, 'meetingId': true })
+		if (data.participantName == 'teacher' && data.oneOnOneMode == false){
+        	res = await dbModels.Doc.findOne({ '_id': data.docId }, { '_id': false, 'meetingId': true })
 
-        socket.broadcast.to(socket.classId).emit("clearDrawingEvents", data);
+        	socket.broadcast.to(socket.classId).emit("clearDrawingEvents", data);
 
-        result = await dbModels.Doc.findOneAndUpdate(
-            {
-                _id: data.docId,
-                // 'drawingEventSet.pageNum' : req.query.currentPage
-            },
-            {
-                $pull: {
-                    drawingEventSet: {
-                        pageNum: data.currentPage,
-                    },
-                },
-            }
-        );
-    });
+        	result = await dbModels.Doc.findOneAndUpdate(
+        	    {
+        	        _id: data.docId,
+        	        // 'drawingEventSet.pageNum' : req.query.currentPage
+        	    },
+        	    {
+        	        $pull: {
+        	            drawingEventSet: {
+        	                pageNum: data.currentPage,
+        	            },
+        	        },
+        	    }
+        	);
+		} 
+		else if (data.participantName != 'teacher'){
+			socket_id = rooms[room].socket_ids[socket.teacher];
+			socket.to(socket_id).emit("clearDrawingEvents", data);
+		}
+	});
 
     socket.on("change:pdfNum", (data) => {
         console.log(data);
