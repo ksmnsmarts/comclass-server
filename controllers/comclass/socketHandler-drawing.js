@@ -307,4 +307,12 @@ module.exports = function (wsServer, socket, app) {
         socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
         socket.to(socket_id).emit("sync:backToFileList");
     });
+
+	/*-------------------------------------------
+	page 전환 하는 경우 sync
+	---------------------------------------------*/
+	socket.on("close:oneOnOneMode", () => {
+		socket.broadcast.to(socket.classId).emit("change:oneOnOneMode");
+	});
+
 };
