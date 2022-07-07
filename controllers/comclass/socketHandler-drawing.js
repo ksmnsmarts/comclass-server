@@ -30,15 +30,15 @@ module.exports = function (wsServer, socket, app) {
 
         socket.teacher = data.teacher
         if (data.role == 'teacher') {
-			// Store current user's nickname and socket.id to MAP
-			rooms[room].socket_ids[data.teacher] = socket.id
+            // Store current user's nickname and socket.id to MAP
+            rooms[room].socket_ids[data.teacher] = socket.id
             console.log("teacher:", data.teacher)
             console.log(rooms[room].socket_ids[data.teacher])
         }
 
         if (data.studentName) {
-			// Store current user's nickname and socket.id to MAP
-			rooms[room].socket_ids[data.studentName] = socket.id
+            // Store current user's nickname and socket.id to MAP
+            rooms[room].socket_ids[data.studentName] = socket.id
             meetingInfo = await dbModels.Meeting.findOneAndUpdate({
                 _id: socket.classId
             },
@@ -63,26 +63,48 @@ module.exports = function (wsServer, socket, app) {
         console.log("current member number:", userCount)
         // 자기 자신 포함 같은 room에 있는 사람들에게 현재 접속자 수 전달
         socketComclass.to(socket.classId).emit("studentCount", userCount);
-
-
-
+        socketComclass.to(socket.classId).emit("studentList:getDocInfo");
     });
 
 
-
-
-
-    // monitoring
-    socket.on('begin:monitoring', () => {
-        console.log(" ( teacher <-- student ) 'begin:monitoring'");
-
-        socketComclass.to(socket.classId).emit("begin:monitoring", '');
+    /*------------------------------------------
+    * 학생 리스트
+    * 선생님이 학생 리스트에 처음 들어왔을 때 학생들의 문서 데이터 받기
+    ------------------------------------------*/
+    // 1. 선생님이 student component에 들어오면 학생들에게 학생들의 문서 정보를 요청.
+    socket.on('studentList:docInfo', (data) => {
+        console.log("1. 선생님이 studentList component에 들어오면 학생들에게 학생들의 문서 정보를 요청.")
+        try {
+            socketComclass.to(socket.classId).emit("studentList:getDocInfo");
+        } catch (error) {
+            console.log(error)
+        }
     })
 
-    // monitoring
+    // 2. 학생이 현재 바라보는 문서 정보 선생님에게 보내기
+    socket.on('studentList:sendDocInfo', async (docData) => {
+        console.log("2. 학생이 현재 바라보는 문서 정보 선생님에게 보내기")
+        console.log(docData)
+        try {
+            console.log(socket.teacher)
+            socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
+            socket.to(socket_id).emit("studentList:sendDocInfo", docData) //특정 socketid에게만 전송        
+
+        } catch (error) {
+            console.log(error)
+        }
+    })
+
+
+    /*------------------------------------------
+    * 학생 리스트
+    * 학생이 페이지를 변경했을 때 선생님에게 학생 데이터 업데이트
+    ------------------------------------------*/
     socket.on('send:monitoringCanvas', (data) => {
         console.log(" ( teacher <-- student ) 'send:monitoringCanvas'")
 
+        console.log('[data]--------------------------------------------')
+        console.log(data)
         var sendData = {
             classId: socket.classId,
             // drawingEvent  : drawingEvent,
@@ -96,35 +118,35 @@ module.exports = function (wsServer, socket, app) {
 
 
     /*------------------------------------------        
-        begin Guidance             
+    * 1:1 모드
+    * 1) 학생에게 1:1 모드라고 알림
     -------------------------------------------*/
     socket.on('begin:guidance', (name) => {
-        console.log("\n ( teacher --> student ) 'begin:guidance'")
-		socket_id = rooms[room].socket_ids[name]; // room 안에 있는 특정 socket 찾기
+        console.log("\n ( teacher --> student ) '1. 1:1 모드 시작 begin:guidance'")
+        socket_id = rooms[room].socket_ids[name]; // room 안에 있는 특정 socket 찾기
+        console.log(name)
 
         // 기존 학생 monitoring 취소 먼저
+        console.log("\n ( teacher --> student ) '2. 기존 1:1 모드 취소")
         socket.broadcast.to(socket.classId).emit("cancel:guidance");
 		
 		socket.oneOnOneTarget = name; // 소켓에 1대1 모드 상대 이름 저장
         // 해당 학생 monitoring 시작
+        console.log("\n ( server --> student ) '3. 학생에게 현재 페이지 정보 전송 요청")
         socket.to(socket_id).emit("get:studentViewInfo") //특정 socketid에게만 전송        
     });
 
-	/*------------------------------------------        
-	set:studentViewInfo           
-	-------------------------------------------*/
-	socket.on('set:studentViewInfo', (currentDocId, currentDocNum, currentPage, zoomScale, drawData) => {
-		console.log('currentDocId: ', currentDocId)
-		console.log('currentDocNum: ', currentDocNum)
-		console.log('currentPage: ', currentPage)
-		console.log('zoomScale: ', zoomScale)
-		console.log('drawData: ', drawData)
-		console.log("\n ( student --> teacher ) 'set:studentViewInfo'")
-		socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
 
-        console.log('student in room : ',rooms[room].socket_ids[socket.studentName])
-        console.log('teacher in room : ',socket_id)
-		const data = {
+    /*------------------------------------------        
+    * 1:1 모드 
+    * 2) 학생에게 받은 현재 페이지 정보 선생님에게 전송   
+    -------------------------------------------*/
+    socket.on('set:studentViewInfo', (currentDocId, currentDocNum, currentPage, zoomScale, drawData) => {
+        console.log("\n ( student --> teacher ) 'set:studentViewInfo'")
+        socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
+
+
+        const data = {
             studentName: socket.studentName,
 			currentDocId: currentDocId,
 			currentDocNum: currentDocNum,
@@ -137,9 +159,11 @@ module.exports = function (wsServer, socket, app) {
 	});
 
 
+
     /*------------------------------------------        
-	    cancel:monitoring           
-	-------------------------------------------*/
+    * 1:1 모드 
+    * 3) 1:1 모드 종료
+    -------------------------------------------*/
     socket.on('cancel:monitoring', () => {
         console.log("\n ( teacher --> student ) 'cancel:monitoring'")
 		socket.oneOnOneTarget='';
@@ -155,7 +179,7 @@ module.exports = function (wsServer, socket, app) {
         console.log("\n ---> class:disconnected:", socket.classId);
         if (!socket.studentName) {
             console.log("disconnect teacher: ", socket.teacher)
-			delete rooms[room].socket_ids[socket.teacher];
+            delete rooms[room].socket_ids[socket.teacher];
         }
         if (socket.studentName) {
             console.log("disconnect student: ", socket.studentName)
@@ -169,9 +193,8 @@ module.exports = function (wsServer, socket, app) {
                     new: true
                 }
             );
-            console.log("currentMembers: ", meetingInfo?.currentMembers)
             socketComclass.to(socket.classId).emit("update:classInfo", meetingInfo);
-			delete rooms[room].socket_ids[socket.studentName];
+            delete rooms[room].socket_ids[socket.studentName];
         }
 
         if (socket.classId) {
@@ -222,6 +245,7 @@ module.exports = function (wsServer, socket, app) {
 
         // tool이 포인터이면 드로잉 이벤를 저장하지 않는다.
         var res = {};
+
 		// if (data.drawingEvent.tool.type != "pointer" && data.participantName == 'teacher' && data.mode == 'syncMode') {
 		if (data.drawingEvent.tool.type != "pointer" && data.drawingEvent.participantName == 'teacher' && data.drawingEvent.oneOnOneMode == false)  {
             res = await dbModels.Doc.findOneAndUpdate({ _id: data.docId }, { $push: { drawingEventSet: drawData } });
@@ -229,11 +253,11 @@ module.exports = function (wsServer, socket, app) {
     });
 
 
-    // // 모니터링모드의 학생이 그린 그림 선생님에게 그리기
-    // socket.on("send:monitoringCanvasDrawEvent", async (data) => {
-    //     console.log('student --------> teacher draw event')
-    //     socket.broadcast.to(socket.classId).emit("send:monitoringCanvasDrawEvent", data);
-    // });
+    // 모니터링모드의 학생이 그린 그림 선생님에게 그리기
+    socket.on("send:monitoringCanvasDrawEvent", async (data) => {
+        console.log('student --------> teacher draw event')
+        socket.broadcast.to(socket.classId).emit("send:monitoringCanvasDrawEvent", data);
+    });
 
 
 
