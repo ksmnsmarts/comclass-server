@@ -63,6 +63,7 @@ module.exports = function (wsServer, socket, app) {
         console.log("current member number:", userCount)
         // 자기 자신 포함 같은 room에 있는 사람들에게 현재 접속자 수 전달
         socketComclass.to(socket.classId).emit("studentCount", userCount);
+        socketComclass.to(socket.classId).emit("studentList:getDocInfo");
     });
 
 
@@ -71,16 +72,21 @@ module.exports = function (wsServer, socket, app) {
     * 선생님이 학생 리스트에 처음 들어왔을 때 학생들의 문서 데이터 받기
     ------------------------------------------*/
     // 1. 선생님이 student component에 들어오면 학생들에게 학생들의 문서 정보를 요청.
-    socket.on('studentList:docInfo', () => {
+    socket.on('studentList:docInfo', (data) => {
         console.log("1. 선생님이 studentList component에 들어오면 학생들에게 학생들의 문서 정보를 요청.")
-        socket.broadcast.to(socket.classId).emit("studentList:getDocInfo");
+        try {
+            socketComclass.to(socket.classId).emit("studentList:getDocInfo");
+        } catch (error) {
+            console.log(error)
+        }
     })
 
     // 2. 학생이 현재 바라보는 문서 정보 선생님에게 보내기
     socket.on('studentList:sendDocInfo', async (docData) => {
+        console.log("2. 학생이 현재 바라보는 문서 정보 선생님에게 보내기")
         console.log(docData)
         try {
-            console.log("2. 학생이 현재 바라보는 문서 정보 선생님에게 보내기")
+            console.log(socket.teacher)
             socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
             socket.to(socket_id).emit("studentList:sendDocInfo", docData) //특정 socketid에게만 전송        
 
@@ -135,7 +141,7 @@ module.exports = function (wsServer, socket, app) {
     * 1:1 모드 
     * 2) 학생에게 받은 현재 페이지 정보 선생님에게 전송   
     -------------------------------------------*/
-    socket.on('set:studentViewInfo', (currentDocId, currentDocNum, currentPage, zoomScale) => {
+    socket.on('set:studentViewInfo', (currentDocId, currentDocNum, currentPage, zoomScale, drawData) => {
         console.log("\n ( student --> teacher ) 'set:studentViewInfo'")
         socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
 
@@ -247,11 +253,11 @@ module.exports = function (wsServer, socket, app) {
     });
 
 
-    // // 모니터링모드의 학생이 그린 그림 선생님에게 그리기
-    // socket.on("send:monitoringCanvasDrawEvent", async (data) => {
-    //     console.log('student --------> teacher draw event')
-    //     socket.broadcast.to(socket.classId).emit("send:monitoringCanvasDrawEvent", data);
-    // });
+    // 모니터링모드의 학생이 그린 그림 선생님에게 그리기
+    socket.on("send:monitoringCanvasDrawEvent", async (data) => {
+        console.log('student --------> teacher draw event')
+        socket.broadcast.to(socket.classId).emit("send:monitoringCanvasDrawEvent", data);
+    });
 
 
 
