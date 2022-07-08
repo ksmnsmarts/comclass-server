@@ -313,8 +313,8 @@ module.exports = function (wsServer, socket, app) {
 
 
     /*-------------------------------------------
-    page 전환 하는 경우 sync
- ---------------------------------------------*/
+        page 전환 하는 경우 sync
+    ---------------------------------------------*/
     socket.on("sync:page", (data) => {
         console.log("doc to sync: ", data.docId);
         console.log("page to sync: ", data.pageNum);
@@ -324,8 +324,8 @@ module.exports = function (wsServer, socket, app) {
 	
 
     /*-------------------------------------------
-    doc. List (문서 목록으로) 하는 경우 sync
- ---------------------------------------------*/
+        doc. List (문서 목록 / leftSideView: 'fileList') 전환 하는 경우 sync
+    ---------------------------------------------*/
     socket.on("sync:FileList", (data) => {
         console.log("back to FileList sync: ");
         socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
