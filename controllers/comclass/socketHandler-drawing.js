@@ -329,6 +329,6 @@ module.exports = function (wsServer, socket, app) {
     socket.on("sync:FileList", (data) => {
         console.log("back to FileList sync: ");
         socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
-        socket.to(socket_id).emit("sync:backToFileList");
+        socket.broadcast.to(socket.classId).emit("sync:backToFileList");
     });
 };
