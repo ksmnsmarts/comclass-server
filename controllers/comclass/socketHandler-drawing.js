@@ -129,7 +129,7 @@ module.exports = function (wsServer, socket, app) {
         // 기존 학생 monitoring 취소 먼저
         console.log("\n ( teacher --> student ) '2. 기존 1:1 모드 취소")
         socket.broadcast.to(socket.classId).emit("cancel:guidance");
-		
+		socket.oneOnOneMode = true;
 		socket.oneOnOneTarget = name; // 소켓에 1대1 모드 상대 이름 저장
         // 해당 학생 monitoring 시작
         console.log("\n ( server --> student ) '3. 학생에게 현재 페이지 정보 전송 요청")
@@ -145,7 +145,7 @@ module.exports = function (wsServer, socket, app) {
         console.log("\n ( student --> teacher ) 'set:studentViewInfo'")
         socket_id = rooms[room].socket_ids[socket.teacher]; // room 안에 있는 특정 socket 찾기
 
-
+		socket.oneOnOneMode = true;
         const data = {
             studentName: socket.studentName,
 			currentDocId: currentDocId,
@@ -177,6 +177,9 @@ module.exports = function (wsServer, socket, app) {
     // disconnect
     socket.on("disconnect", async function () {
         console.log("\n ---> class:disconnected:", socket.classId);
+		if (socket.oneOnOneMode){
+			socket.broadcast.to(socket.classId).emit("change:oneOnOneMode");
+		}
         if (!socket.studentName) {
             console.log("disconnect teacher: ", socket.teacher)
             delete rooms[room].socket_ids[socket.teacher];
@@ -337,7 +340,7 @@ module.exports = function (wsServer, socket, app) {
 	page 전환 하는 경우 sync
 	---------------------------------------------*/
 	socket.on("close:oneOnOneMode", () => {
-		socket.broadcast.to(socket.classId).emit("change:oneOnOneMode");
+		socket.oneOnOneMode = false;
 	});
 
 };
