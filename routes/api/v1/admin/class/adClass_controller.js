@@ -1,4 +1,5 @@
 const { ObjectId } = require('bson');
+const mongoose = require('mongoose');
 var fs = require("fs");
 const s3 = global.AWS_S3.s3;
 const bucket = global.AWS_S3.bucket;
@@ -118,11 +119,29 @@ exports.getClassInfo = async (req, res) => {
     try {
         const meetingInfo = await dbModels.Meeting.findOne(criteria);
 
-        if (!meetingInfo) {
-            return res.status(401).send({
-                message: 'An error has occurred'
-            });
-        }
+		// 유효성 검사
+		if (meetingInfo) {
+			// Whiteboard document 생성
+			const docObj = {
+				_id: new mongoose.Types.ObjectId(),
+				classId: meetingInfo._id,
+				originalFileName: 'whiteboard',
+				fileName: 'whiteboard',
+				saveKey: 'upload-file/hcanvas.pdf',
+				fileSize: 1840,
+			}
+
+			dbModels.Doc.init();
+			let DocInfo = await dbModels.Doc.findOne({ classId: meetingInfo._id });
+			// Doc이 없는 경우
+			if (!DocInfo) {
+				const docData = new dbModels.Doc(docObj);
+				await docData.save();
+			}
+
+		} else {
+			res.status(500).send('internal server error');
+		}
 
         return res.send(
             meetingInfo
@@ -255,5 +274,58 @@ exports.getPdfFile = async (req, res) => {
     //     res.download(filePath);
     // })
 
+
+}
+
+/**
+ *   참가중 인 수업 PDF 삭제
+ */
+exports.deleteClassPdfFile = async (req, res) => {
+
+	console.log(`
+--------------------------------------------------
+  User : 
+  API  : Delete ClassPdfFile
+  router.get('/deleteClassPdfFile', adClassCtrl.deleteClassPdfFile);
+--------------------------------------------------`);
+	const dbModels = global.DB_MODELS;
+
+	try {
+
+		if (!req.query._id) {
+			return res.status(400).send('invalid meeting id1');
+		}
+		
+
+		result = await dbModels.Doc.findOne({ _id: req.query._id }, { _id: false, saveKey: true, classId: true });
+
+		if (!result) {
+			return res.status(400).send('invalid meeting id2');
+		}
+		// console.log(req.files[0])
+		const params = {
+			Bucket: bucket,
+			Key: result.saveKey
+		};
+		s3.deleteObject(params, function (err, data) {
+			if (err) console.log(err, err.stack);
+			else console.log('s3 delete Success');
+		})
+		await dbModels.Doc.findOneAndDelete(
+			{
+				_id: req.query._id
+			}
+		)
+
+		res.status(200).send({
+			message: 'upload file delete',
+			classId: result.classId,
+		});
+
+
+	} catch (err) {
+		console.log(err);
+		res.status(500).send('internal server error');
+	}
 
 }

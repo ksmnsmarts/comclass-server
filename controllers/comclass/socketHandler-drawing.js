@@ -213,7 +213,8 @@ module.exports = function (wsServer, socket, app) {
      *  - code 통일성을 위해서!
      */
     socket.on("check:documents", (meetingRoomId) => {
-        console.log(meetingRoomId)
+		console.log('check:documents')
+        console.log('class Id : ',meetingRoomId)
         socketComclass.to(meetingRoomId).emit("check:documents");
     });
 
