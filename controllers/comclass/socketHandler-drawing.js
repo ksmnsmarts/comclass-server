@@ -178,6 +178,7 @@ module.exports = function (wsServer, socket, app) {
     socket.on("disconnect", async function () {
         console.log("\n ---> class:disconnected:", socket.classId);
 		if (socket.oneOnOneMode){
+			console.log("close: oneOnOneMode")
 			socket.broadcast.to(socket.classId).emit("change:oneOnOneMode");
 		}
         if (!socket.studentName) {
