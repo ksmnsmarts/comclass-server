@@ -335,9 +335,10 @@ module.exports = function (wsServer, socket, app) {
     });
 
 	/*-------------------------------------------
-	page 전환 하는 경우 sync
+	    페이지 나간 경우 1:1 모드 해제
 	---------------------------------------------*/
 	socket.on("close:oneOnOneMode", () => {
+        console.log('close oneOnOne')
 		socket.broadcast.to(socket.classId).emit("change:oneOnOneMode");
 	});
 
