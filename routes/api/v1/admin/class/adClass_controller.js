@@ -117,13 +117,13 @@ exports.getClassInfo = async (req, res) => {
 
 
     const criteria = {
-        'access_key': data.access_key
+		'access_key': data.access_key
     };
-
+	console.log(data)
 
     try {
         const meetingInfo = await dbModels.Meeting.findOne(criteria);
-
+		console.log(meetingInfo)
 		// 유효성 검사
 		if (meetingInfo) {
 			// Whiteboard document 생성
