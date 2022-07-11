@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 var fs = require("fs");
 const s3 = global.AWS_S3.s3;
 const bucket = global.AWS_S3.bucket;
+const randomize = require('randomatic');
 
 // 수업 등록
 exports.addClass = async (req, res) => {
@@ -16,6 +17,9 @@ exports.addClass = async (req, res) => {
 
     const data = req.body;
 
+    const eCode = randomize('a0', 6);
+
+    console.log('eCode', eCode)
 
     const criteria = { _id: req.decoded._id };
     const projection = {
@@ -38,6 +42,7 @@ exports.addClass = async (req, res) => {
 
 
         const meetingData = {
+            access_key: eCode,
             teacher: data.teacher,
             subject: data.subject,
             'manager.manager_id': adUser._id,
@@ -51,7 +56,7 @@ exports.addClass = async (req, res) => {
 
 
         return res.send({
-            message: 'Success saved class',
+            message: 'Success saved class'
         });
     } catch (err) {
         console.log(err);

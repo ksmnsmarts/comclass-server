@@ -2,6 +2,9 @@ const mongoose = require('mongoose');
 
 const meetingSchema = mongoose.Schema(
     {
+        access_key: {
+            type: String
+        },
         teacher: {
             type: String
         },

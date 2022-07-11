@@ -1,7 +1,48 @@
 const { ObjectId } = require('bson');
 var fs = require("fs");
+const mongoose = require('mongoose');
 const s3 = global.AWS_S3.s3;
 const bucket = global.AWS_S3.bucket;
+
+
+
+// 수업 유효성 검사
+exports.joinClass = async (req, res) => {
+    console.log(`
+--------------------------------------------------
+  User Profile: req.decoded._id
+  router.get('/joinClass', classCtrl.joinClass);
+--------------------------------------------------`);
+
+    const dbModels = global.DB_MODELS;
+
+    const data = req.query;
+
+    const criteria = {
+        access_key: data.access_key 
+    };
+
+
+    try {
+        const meetingInfo = await dbModels.Meeting.findOne(criteria);
+
+        if (!meetingInfo) {
+            return res.send({
+                message: 'An error has occurred'
+            });
+        }
+
+        return res.send({
+            meetingInfo,
+            message: 'success find room' ,
+        });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send('db Error');
+    }
+
+}
 
 // 수업 가져오기
 exports.getClass = async (req, res) => {
@@ -62,7 +103,28 @@ exports.getClassInfo = async (req, res) => {
     try {
         const meetingInfo = await dbModels.Meeting.findOne(criteria);
 
-        if (!meetingInfo) {
+
+        // 유효성 검사
+		if (meetingInfo) {
+			// Whiteboard document 생성
+			const docObj = {
+				_id: new mongoose.Types.ObjectId(),
+				classId: meetingInfo._id,
+				originalFileName: 'whiteboard',
+				fileName: 'whiteboard',
+				saveKey: 'upload-file/hcanvas.pdf',
+				fileSize: 1840,
+			}
+
+			dbModels.Doc.init();
+			let DocInfo = await dbModels.Doc.findOne({ classId: meetingInfo._id });
+			// Doc이 없는 경우
+			if (!DocInfo) {
+				const docData = new dbModels.Doc(docObj);
+				await docData.save();
+			}
+
+		} else if (!meetingInfo) {
             return res.status(401).send({
                 message: 'An error has occurred'
             });
