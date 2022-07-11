@@ -96,7 +96,7 @@ exports.getClassInfo = async (req, res) => {
 
 
     const criteria = {
-        '_id': data._id
+		'access_key': data.access_key
     };
 
 
