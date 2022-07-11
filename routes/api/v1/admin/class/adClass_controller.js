@@ -126,6 +126,8 @@ exports.getClassInfo = async (req, res) => {
 		console.log(meetingInfo)
 		// 유효성 검사
 		if (meetingInfo) {
+			
+
 			// Whiteboard document 생성
 			const docObj = {
 				_id: new mongoose.Types.ObjectId(),
@@ -156,6 +158,67 @@ exports.getClassInfo = async (req, res) => {
         console.log(err);
         return res.status(500).send('db Error');
     }
+
+}
+
+// 수업 삭제
+exports.deleteClass = async (req, res) => {
+	console.log(`
+--------------------------------------------------
+  User Profile: ${req.decoded._id}
+  router.get('/deleteClass', adClassCtrl.deleteClass);
+--------------------------------------------------`);
+
+	const dbModels = global.DB_MODELS;
+
+	const data = req.query;
+
+
+	const criteria = {
+		'_id': data._id
+	};
+
+	try {
+		const meetingResult = await dbModels.Meeting.deleteOne(criteria);
+		// 유효성 검사
+		if (meetingResult) {
+			let docInfo = await dbModels.Doc.find({ classId : data._id },{ _id:0, saveKey:1 })
+			
+			if (docInfo){
+				docInfo = docInfo.map(item => {
+					return {
+						Key: item.saveKey,
+					};
+				});
+
+				const params = {
+					Bucket: bucket,
+					Delete: {
+						Objects: docInfo
+					}
+				};
+
+				s3.deleteObjects(params, function (err, data) {
+					if (err) console.log(err, err.stack);
+					else console.log('s3 delete Success');
+				})
+
+				const deleteResult = await dbModels.Doc.deleteMany({ classId: data._id });
+			
+			} 
+
+		} else {
+			res.status(500).send('internal server error');
+		}
+
+		return res.send(
+			meetingResult
+		);
+
+	} catch (err) {
+		console.log(err);
+		return res.status(500).send('db Error');
+	}
 
 }
 
