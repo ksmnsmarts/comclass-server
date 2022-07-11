@@ -5,7 +5,6 @@ const s3 = global.AWS_S3.s3;
 const bucket = global.AWS_S3.bucket;
 
 
-
 // 수업 유효성 검사
 exports.joinClass = async (req, res) => {
     console.log(`
@@ -17,6 +16,8 @@ exports.joinClass = async (req, res) => {
     const dbModels = global.DB_MODELS;
 
     const data = req.query;
+
+    console.log(data)
 
     const criteria = {
         access_key: data.access_key 
