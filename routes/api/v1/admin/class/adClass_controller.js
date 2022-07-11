@@ -183,30 +183,22 @@ exports.deleteClass = async (req, res) => {
 		// 유효성 검사
 		if (meetingResult) {
 			let docInfo = await dbModels.Doc.find({ classId : data._id },{ _id:0, saveKey:1 })
+			docInfo = docInfo.filter(index => index.saveKey !== 'upload-file/hcanvas.pdf')
 			
-			if (docInfo){
-				docInfo = docInfo.map(item => {
-					return {
-						Key: item.saveKey,
-					};
-				});
-
+			if (docInfo.length > 0){
+				docInfo = docInfo.map(item => {	return { Key: item.saveKey}; });
 				const params = {
 					Bucket: bucket,
 					Delete: {
 						Objects: docInfo
 					}
 				};
-
 				s3.deleteObjects(params, function (err, data) {
 					if (err) console.log(err, err.stack);
 					else console.log('s3 delete Success');
 				})
-
 				const deleteResult = await dbModels.Doc.deleteMany({ classId: data._id });
-			
 			} 
-
 		} else {
 			res.status(500).send('internal server error');
 		}
