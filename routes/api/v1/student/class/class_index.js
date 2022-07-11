@@ -37,7 +37,7 @@ const upload = multer({ storage });
 /*-----------------------------------
     Class 
 -----------------------------------*/
-
+router.get('/joinClass', classCtrl.joinClass);
 router.get('/getClass', classCtrl.getClass);
 router.get('/getClassInfo', classCtrl.getClassInfo);
 router.get('/documentInfo', classCtrl.documentInfo);
