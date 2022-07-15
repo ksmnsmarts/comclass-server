@@ -103,8 +103,6 @@ module.exports = function (wsServer, socket, app) {
 	socket.on('send:monitoringCanvas', (data) => {
 		console.log(" ( teacher <-- student ) 'send:monitoringCanvas'")
 
-		console.log('[data]--------------------------------------------')
-		console.log(data)
 		var sendData = {
 			classId: socket.classId,
 			// drawingEvent  : drawingEvent,
@@ -124,7 +122,6 @@ module.exports = function (wsServer, socket, app) {
 	socket.on('begin:guidance', (name) => {
 		console.log("\n ( teacher --> student ) '1. 1:1 모드 시작 begin:guidance'")
 		socket_id = rooms[room].socket_ids[name]; // room 안에 있는 특정 socket 찾기
-		console.log(name)
 
 		// 기존 학생 monitoring 취소 먼저
 		console.log("\n ( teacher --> student ) '2. 기존 1:1 모드 취소")
@@ -155,7 +152,6 @@ module.exports = function (wsServer, socket, app) {
 			drawData: drawData,
 		}
 		socket.to(socket_id).emit("teacher:studentViewInfo", data) //특정 socketid에게만 전송
-		console.log("teacher:studentViewInfo :", data)
 	});
 
 
